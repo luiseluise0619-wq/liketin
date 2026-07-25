@@ -1,0 +1,173 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Dating App API (liketin)",
+    "description": "REST API for the liketin dating app",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:3000/api", "description": "Development" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "string" }, "code": { "type": "string" } }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "type": "object" },
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "name", "birthDate", "gender", "interestedIn"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "name": { "type": "string" },
+                  "birthDate": { "type": "string", "format": "date" },
+                  "gender": { "type": "string", "enum": ["MALE", "FEMALE", "OTHER"] },
+                  "interestedIn": { "type": "string", "enum": ["MALE", "FEMALE", "BOTH"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } }
+            }
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "Email already exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
+          "401": { "description": "Invalid credentials", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh tokens",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["refreshToken"], "properties": { "refreshToken": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Expired" } }
+      }
+    },
+    "/profile/me": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get current profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+      },
+      "put": {
+        "tags": ["Profile"],
+        "summary": "Update profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/swipe/recommendations": {
+      "get": {
+        "tags": ["Swipe"],
+        "summary": "Get recommendations",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/swipe": {
+      "post": {
+        "tags": ["Swipe"],
+        "summary": "Swipe on a profile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["targetUserId", "type"], "properties": { "targetUserId": { "type": "string", "format": "uuid" }, "type": { "type": "string", "enum": ["LIKE", "NOPE", "SUPER_LIKE"] } } } } } },
+        "responses": { "200": { "description": "OK" }, "429": { "description": "Rate limited" } }
+      }
+    },
+    "/match": {
+      "get": {
+        "tags": ["Match"],
+        "summary": "List matches",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/chat/messages": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Send a message",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/chat/messages/{matchId}": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Get messages for a match",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "matchId", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/report": {
+      "post": {
+        "tags": ["Report"],
+        "summary": "Report a user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Dashboard statistics",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" }, "403": { "description": "Admin required" } }
+      }
+    }
+  }
+}

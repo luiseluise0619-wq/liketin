@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Env
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build
+build/
+dist/
+coverage/
+
+# Prisma
+prisma/migrations/dev/
+
+# Flutter
+frontend/.dart_tool/
+frontend/.packages
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/pubspec.lock
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Firebase / secrets
+serviceAccount*.json
+*.pem
+
+# Terraform
+infrastructure/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars

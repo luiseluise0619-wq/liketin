@@ -1,0 +1,400 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum InterestedIn {
+  MALE
+  FEMALE
+  BOTH
+}
+
+enum SwipeType {
+  LIKE
+  NOPE
+  SUPER_LIKE
+}
+
+enum MatchStatus {
+  PENDING
+  MATCHED
+  UNMATCHED
+  BLOCKED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VOICE
+  VIDEO
+  LOCATION
+  EMOJI
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DELETED
+  PENDING_VERIFICATION
+}
+
+enum PremiumType {
+  NONE
+  PLUS
+  GOLD
+  PLATINUM
+}
+
+enum VerificationType {
+  EMAIL
+  PHONE
+  IDENTITY
+  PHOTO
+}
+
+enum ReportReason {
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  FAKE_PROFILE
+  SPAM
+  UNDERAGE
+  OTHER
+}
+
+enum NotificationType {
+  MATCH
+  MESSAGE
+  LIKE
+  SUPER_LIKE
+  BOOST
+  SYSTEM
+  PROMOTION
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  phoneNumber    String?      @unique @map("phone_number")
+  passwordHash   String?      @map("password_hash")
+
+  name           String
+  birthDate      DateTime     @map("birth_date")
+  gender         Gender
+  interestedIn   InterestedIn @map("interested_in")
+  bio            String?
+  job            String?
+  height         Int?
+  mbti           String?
+  location       Json?
+
+  photos         UserPhoto[]
+  interests      UserInterest[]
+
+  authProvider   String?      @map("auth_provider")
+  authProviderId String?      @map("auth_provider_id")
+  emailVerified  Boolean      @default(false) @map("email_verified")
+  phoneVerified  Boolean      @default(false) @map("phone_verified")
+
+  status         UserStatus   @default(PENDING_VERIFICATION)
+  isOnline       Boolean      @default(false) @map("is_online")
+  lastActiveAt   DateTime     @default(now()) @map("last_active_at")
+
+  premiumType      PremiumType @default(NONE) @map("premium_type")
+  premiumExpiresAt DateTime?   @map("premium_expires_at")
+
+  verifications  Verification[]
+  settings       UserSettings?
+
+  swipesGiven    Swipe[] @relation("SwipesGiven")
+  swipesReceived Swipe[] @relation("SwipesReceived")
+
+  matchesAsUser1 Match[] @relation("MatchesAsUser1")
+  matchesAsUser2 Match[] @relation("MatchesAsUser2")
+
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+
+  reportsMade     Report[] @relation("ReportsMade")
+  reportsReceived Report[] @relation("ReportsReceived")
+
+  blocksMade     Block[] @relation("BlocksMade")
+  blocksReceived Block[] @relation("BlocksReceived")
+
+  notifications Notification[]
+  stories       Story[]
+  boosts        Boost[]
+
+  superLikesCount   Int      @default(0) @map("super_likes_count")
+  superLikesResetAt DateTime @default(now()) @map("super_likes_reset_at")
+
+  dailyLikesCount   Int      @default(0) @map("daily_likes_count")
+  dailyLikesResetAt DateTime @default(now()) @map("daily_likes_reset_at")
+
+  fcmToken String? @map("fcm_token")
+  isAdmin  Boolean @default(false) @map("is_admin")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([gender, interestedIn])
+  @@index([status])
+  @@index([premiumType])
+  @@index([lastActiveAt])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model UserPhoto {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  isMain    Boolean  @default(false) @map("is_main")
+  aiScore   Float?   @map("ai_score")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([isMain])
+  @@map("user_photos")
+}
+
+model UserInterest {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("user_interests")
+}
+
+model Verification {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        VerificationType
+  status      String           @default("pending")
+  documentUrl String?          @map("document_url")
+  verifiedAt  DateTime?        @map("verified_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([type])
+  @@map("verifications")
+}
+
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  minAge      Int     @default(18) @map("min_age")
+  maxAge      Int     @default(50) @map("max_age")
+  maxDistance Int     @default(50) @map("max_distance")
+  showMe      Boolean @default(true) @map("show_me")
+
+  matchNotifications   Boolean @default(true) @map("match_notifications")
+  messageNotifications Boolean @default(true) @map("message_notifications")
+  likeNotifications    Boolean @default(true) @map("like_notifications")
+  pushNotifications    Boolean @default(true) @map("push_notifications")
+  emailNotifications   Boolean @default(true) @map("email_notifications")
+
+  showDistance  Boolean @default(true) @map("show_distance")
+  showAge       Boolean @default(true) @map("show_age")
+  incognitoMode Boolean @default(false) @map("incognito_mode")
+  darkMode      Boolean @default(false) @map("dark_mode")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("user_settings")
+}
+
+model Swipe {
+  id        String    @id @default(uuid())
+  swiperId  String    @map("swiper_id")
+  swiper    User      @relation("SwipesGiven", fields: [swiperId], references: [id])
+  swipedId  String    @map("swiped_id")
+  swiped    User      @relation("SwipesReceived", fields: [swipedId], references: [id])
+  type      SwipeType
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@unique([swiperId, swipedId])
+  @@index([swiperId])
+  @@index([swipedId])
+  @@index([createdAt])
+  @@map("swipes")
+}
+
+model Match {
+  id          String      @id @default(uuid())
+  user1Id     String      @map("user1_id")
+  user1       User        @relation("MatchesAsUser1", fields: [user1Id], references: [id])
+  user2Id     String      @map("user2_id")
+  user2       User        @relation("MatchesAsUser2", fields: [user2Id], references: [id])
+  status      MatchStatus @default(PENDING)
+  matchedAt   DateTime    @default(now()) @map("matched_at")
+  unmatchedAt DateTime?   @map("unmatched_at")
+  unmatchedBy String?     @map("unmatched_by")
+
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([status])
+  @@map("matches")
+}
+
+model Message {
+  id         String        @id @default(uuid())
+  matchId    String        @map("match_id")
+  match      Match         @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  senderId   String        @map("sender_id")
+  sender     User          @relation("MessagesSent", fields: [senderId], references: [id])
+  receiverId String        @map("receiver_id")
+  receiver   User          @relation("MessagesReceived", fields: [receiverId], references: [id])
+  content    String
+  type       MessageType   @default(TEXT)
+  mediaUrl   String?       @map("media_url")
+  status     MessageStatus @default(SENDING)
+  readAt     DateTime?     @map("read_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  @@index([matchId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reporterId  String       @map("reporter_id")
+  reporter    User         @relation("ReportsMade", fields: [reporterId], references: [id])
+  reportedId  String       @map("reported_id")
+  reported    User         @relation("ReportsReceived", fields: [reportedId], references: [id])
+  reason      ReportReason
+  description String?
+  status      String       @default("pending")
+  reviewedBy  String?      @map("reviewed_by")
+  reviewedAt  DateTime?    @map("reviewed_at")
+  action      String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+  @@map("reports")
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String   @map("blocker_id")
+  blocker   User     @relation("BlocksMade", fields: [blockerId], references: [id])
+  blockedId String   @map("blocked_id")
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@map("blocks")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Story {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl  String   @map("media_url")
+  type      String   @default("image")
+  views     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("stories")
+}
+
+model Boost {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt DateTime @map("started_at")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("boosts")
+}
+
+model AdminLog {
+  id        String   @id @default(uuid())
+  adminId   String   @map("admin_id")
+  action    String
+  targetId  String?  @map("target_id")
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_logs")
+}
+
+model SubscriptionPlan {
+  id        String      @id @default(uuid())
+  name      String
+  type      PremiumType
+  price     Float
+  currency  String      @default("USD")
+  duration  Int
+  features  Json
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@map("subscription_plans")
+}

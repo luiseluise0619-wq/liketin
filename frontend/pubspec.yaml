@@ -1,0 +1,55 @@
+name: liketin
+description: A Tinder-like dating app (Flutter client)
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+
+  # Networking
+  http: ^1.2.2
+  http_parser: ^4.0.2
+  socket_io_client: ^2.0.3+1
+
+  # Firebase
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.20.0
+  firebase_messaging: ^14.9.4
+  firebase_storage: ^11.7.7
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.1
+
+  # UI
+  cached_network_image: ^3.3.1
+  image_picker: ^1.1.2
+  flutter_local_notifications: ^17.2.2
+
+  # Location / maps
+  geolocator: ^12.0.0
+  google_maps_flutter: ^2.7.0
+  permission_handler: ^11.3.1
+
+  # Storage / utils
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.2
+  intl: ^0.19.0
+  uuid: ^4.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@db:5432/datingapp
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:-dev-access-secret}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-dev-refresh-secret}
+      - FIREBASE_SERVICE_ACCOUNT_BASE64=${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+      - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - dating-app
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=datingapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d datingapp']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dating-app
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - dating-app
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  dating-app:
+    driver: bridge
