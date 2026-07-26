@@ -35,6 +35,14 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    final refreshToken = await StorageService.getRefreshToken();
+    if (refreshToken != null) {
+      try {
+        await _api.post('/auth/logout', body: {'refreshToken': refreshToken});
+      } catch (_) {
+        // Best-effort server-side revocation; always clear locally.
+      }
+    }
     await StorageService.clearTokens();
     ApiClient().clearToken();
   }

@@ -52,6 +52,9 @@ class AuthController {
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({ error: 'Refresh token expired', code: 'REFRESH_EXPIRED' });
       }
+      if (error.code === 'REFRESH_REVOKED' || error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Refresh token invalid', code: 'REFRESH_REVOKED' });
+      }
       next(error);
     }
   }
@@ -67,8 +70,13 @@ class AuthController {
     }
   }
 
-  async logout(req, res) {
-    res.json({ message: 'Logged out successfully' });
+  async logout(req, res, next) {
+    try {
+      await authService.logout(req.body.refreshToken);
+      res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 

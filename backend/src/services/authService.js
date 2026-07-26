@@ -1,7 +1,7 @@
 const prisma = require('../config/database');
 const { auth } = require('../config/firebase');
 const { hashPassword, comparePassword } = require('../utils/encryption');
-const { generateTokens, verifyRefreshToken } = require('../utils/jwt');
+const tokenService = require('./tokenService');
 const logger = require('../utils/logger');
 
 class AuthService {
@@ -38,7 +38,7 @@ class AuthService {
       select: { id: true, email: true, name: true, status: true },
     });
 
-    const tokens = generateTokens({ userId: user.id, email: user.email });
+    const tokens = await tokenService.issue({ userId: user.id, email: user.email });
     logger.info(`User registered: ${user.id}`);
     return { user, ...tokens };
   }
@@ -57,7 +57,7 @@ class AuthService {
       throw new Error('Account not active');
     }
 
-    const tokens = generateTokens({ userId: user.id, email: user.email });
+    const tokens = await tokenService.issue({ userId: user.id, email: user.email });
     logger.info(`User logged in: ${user.id}`);
     return { user: this.sanitize(user), ...tokens };
   }
@@ -90,15 +90,18 @@ class AuthService {
       });
     }
 
-    const tokens = generateTokens({ userId: user.id, email: user.email });
+    const tokens = await tokenService.issue({ userId: user.id, email: user.email });
     return { user: this.sanitize(user), ...tokens };
   }
 
   async refreshToken(refreshToken) {
-    const decoded = verifyRefreshToken(refreshToken);
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    if (!user) throw new Error('User not found');
-    return generateTokens({ userId: user.id, email: user.email });
+    // Rotates the refresh token and rejects revoked/reused ones.
+    return tokenService.rotate(refreshToken);
+  }
+
+  async logout(refreshToken) {
+    if (refreshToken) await tokenService.revoke(refreshToken);
+    return { message: 'Logged out successfully' };
   }
 
   async resetPassword(email) {

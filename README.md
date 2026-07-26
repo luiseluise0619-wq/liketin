@@ -69,7 +69,8 @@ RUN_INTEGRATION=1 DATABASE_URL=... npm test   # 통합 테스트 (DB 필요)
 
 ### 아직 남은 프로덕션 과제 (의도적 미구현)
 
-- **CSRF / Refresh 토큰 무효화**: 현재 JWT stateless. 로그아웃 시 토큰 블랙리스트(Redis) 필요.
+- **CSRF**: 토큰 기반 API라 우선순위 낮음. 쿠키 세션 도입 시 필요.
+- ~~**Refresh 토큰 무효화**~~ ✅ 구현됨: Redis 기반 refresh 토큰 회전(rotation) + 로그아웃 폐기 + 재사용 감지 (`services/tokenService.js`).
 - **이미지 NSFW 검증**: `middleware/upload.js` 에 훅 지점만 존재. 실제 모더레이션 미연동.
 - **AI 기능**(`aiService.js`): 결정론적 플레이스홀더. Gemini/Vision 연동 필요.
 - **결제/프리미엄/부스트/스토리/영상통화**: 스키마·시그널링은 있으나 결제 게이트웨이 미연동.
