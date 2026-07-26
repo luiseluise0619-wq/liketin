@@ -36,6 +36,17 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 app.use(compression());
+
+// Stripe webhook must receive the raw body for signature verification, so it is
+// registered before the JSON body parser.
+// eslint-disable-next-line global-require
+const premiumController = require('./controllers/premiumController');
+app.post(
+  '/api/premium/webhook',
+  express.raw({ type: 'application/json' }),
+  premiumController.webhook
+);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

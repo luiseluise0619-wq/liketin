@@ -28,7 +28,20 @@ class _PremiumPageState extends State<PremiumPage> {
   Future<void> _subscribe(Map<String, dynamic> plan) async {
     setState(() => _subscribingId = plan['id'] as String?);
     try {
-      await ApiClient().post('/premium/subscribe', body: {'planId': plan['id']});
+      // Step 1: create the payment intent.
+      final intent = await ApiClient().post('/premium/subscribe', body: {'planId': plan['id']});
+
+      // Step 2: confirm payment. In sandbox mode the intent auto-succeeds; with
+      // real Stripe the app would first present the payment sheet using
+      // intent['clientSecret'] before calling /confirm.
+      if (intent['sandbox'] != true) {
+        // TODO: present Stripe payment sheet with intent['clientSecret'] here.
+      }
+      await ApiClient().post('/premium/confirm', body: {
+        'planId': plan['id'],
+        'intentId': intent['intentId'],
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${plan['name']} activated 🎉')),

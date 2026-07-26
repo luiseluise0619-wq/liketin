@@ -73,7 +73,8 @@ RUN_INTEGRATION=1 DATABASE_URL=... npm test   # 통합 테스트 (DB 필요)
 - ~~**Refresh 토큰 무효화**~~ ✅ 구현됨: Redis 기반 refresh 토큰 회전(rotation) + 로그아웃 폐기 + 재사용 감지 (`services/tokenService.js`).
 - **이미지 NSFW 검증**: `middleware/upload.js` 에 훅 지점만 존재. 실제 모더레이션 미연동.
 - **AI 기능**(`aiService.js`): 결정론적 플레이스홀더. Gemini/Vision 연동 필요.
-- **결제/프리미엄/부스트/스토리/영상통화**: 스키마·시그널링은 있으나 결제 게이트웨이 미연동.
+- ~~**결제 게이트웨이**~~ ✅ provider 추상화 완료: `services/paymentService.js` — Stripe(키 설정 시) 또는 sandbox 모드. 프리미엄은 결제 **확인 후에만** 부여(subscribe→confirm), 웹훅으로 이중 보장. 실 운영은 `STRIPE_SECRET_KEY` 설정 + 클라이언트 Stripe 결제 시트 연결만 하면 됨.
+- **영상통화**: WebRTC 시그널링만 존재(미디어 P2P는 클라이언트 구현 필요).
 - **거리 쿼리 스케일**: 대규모에서는 PostGIS 또는 Redis GEO 로 이전 권장.
 
 즉 **잘 구조화된 MVP 스캐폴드**이며, 위 항목을 채우면 서비스 수준에 도달합니다.
