@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../constants/api_constants.dart';
 import '../../services/storage_service.dart';
@@ -50,6 +52,28 @@ class ApiClient {
           headers: _headers,
         ),
       );
+
+  /// Multipart upload for one or more files under [field].
+  Future<dynamic> uploadFiles(
+    String path,
+    List<File> files, {
+    String field = 'photos',
+  }) async {
+    final request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.baseApiUrl}$path'));
+    if (_accessToken != null) {
+      request.headers['Authorization'] = 'Bearer $_accessToken';
+    }
+    for (final file in files) {
+      request.files.add(await http.MultipartFile.fromPath(
+        field,
+        file.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
+    }
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _handle(response);
+  }
 
   Future<dynamic> _send(Future<http.Response> Function() request) async {
     var response = await request();

@@ -20,6 +20,11 @@ const matchRoutes = require('./routes/match');
 const chatRoutes = require('./routes/chat');
 const reportRoutes = require('./routes/report');
 const adminRoutes = require('./routes/admin');
+const premiumRoutes = require('./routes/premium');
+const boostRoutes = require('./routes/boost');
+const storyRoutes = require('./routes/story');
+const verificationRoutes = require('./routes/verification');
+const notificationRoutes = require('./routes/notification');
 
 const app = express();
 const httpServer = createServer(app);
@@ -47,6 +52,11 @@ app.use('/api/match', matchRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/premium', premiumRoutes);
+app.use('/api/boost', boostRoutes);
+app.use('/api/story', storyRoutes);
+app.use('/api/verification', verificationRoutes);
+app.use('/api/notification', notificationRoutes);
 
 // Swagger docs (optional — only if the spec file exists).
 const swaggerPath = path.join(__dirname, '../swagger/swagger.json');

@@ -121,6 +121,73 @@ class _ChatPageState extends State<ChatPage> {
   bool _isMine(Map<String, dynamic> m) =>
       widget.otherUserId != null && m['senderId'] != widget.otherUserId;
 
+  Future<void> _block() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Block user'),
+        content: Text('Block ${widget.otherName}? You will be unmatched.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Block', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ApiClient().post(ApiConstants.block, body: {'userId': widget.otherUserId});
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      _snack(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<void> _report() async {
+    const reasons = {
+      'INAPPROPRIATE_CONTENT': 'Inappropriate content',
+      'HARASSMENT': 'Harassment',
+      'FAKE_PROFILE': 'Fake profile',
+      'SPAM': 'Spam',
+      'UNDERAGE': 'Underage',
+      'OTHER': 'Other',
+    };
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: reasons.entries
+              .map((e) => ListTile(
+                    title: Text(e.value),
+                    onTap: () => Navigator.pop(context, e.key),
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+    if (reason == null) return;
+    try {
+      await ApiClient().post(ApiConstants.report, body: {
+        'reportedId': widget.otherUserId,
+        'reason': reason,
+      });
+      if (mounted) {
+        _snack('Report submitted');
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      _snack(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,6 +211,16 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ],
         ),
+        actions: [
+          if (widget.otherUserId != null)
+            PopupMenuButton<String>(
+              onSelected: (v) => v == 'block' ? _block() : _report(),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'report', child: Text('Report')),
+                PopupMenuItem(value: 'block', child: Text('Block')),
+              ],
+            ),
+        ],
       ),
       body: Column(
         children: [

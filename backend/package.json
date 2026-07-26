@@ -11,6 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
@@ -33,6 +34,9 @@
     "socket.io": "^4.7.5",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.14.2"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
