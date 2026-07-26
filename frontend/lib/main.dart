@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
+import 'presentation/bloc/auth/auth_bloc.dart';
+import 'presentation/bloc/auth/auth_state.dart';
+import 'presentation/pages/login/login_page.dart';
+import 'presentation/pages/splash/splash_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const LiketinApp());
 }
 
@@ -12,45 +19,29 @@ class LiketinApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'liketin',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.system,
-      home: const _Placeholder(),
-    );
-  }
-}
-
-/// Minimal entry screen. Full screens (splash, login, swipe, chat, profile)
-/// are documented in frontend/README.md and wired via flutter_bloc.
-class _Placeholder extends StatelessWidget {
-  const _Placeholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.favorite, size: 80, color: Colors.white),
-              SizedBox(height: 16),
-              Text(
-                'liketin',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+    return BlocProvider(
+      create: (_) => AuthBloc(),
+      child: MaterialApp(
+        title: 'liketin',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme(),
+        darkTheme: AppTheme.darkTheme(),
+        themeMode: ThemeMode.system,
+        navigatorKey: _navigatorKey,
+        home: BlocListener<AuthBloc, AuthState>(
+          // Global: when the session ends (logout / expiry), return to login.
+          listenWhen: (prev, curr) => curr is Unauthenticated && prev is! AuthInitial,
+          listener: (context, state) {
+            _navigatorKey.currentState?.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+              (route) => false,
+            );
+          },
+          child: const SplashPage(),
         ),
       ),
     );
   }
 }
+
+final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
