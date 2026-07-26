@@ -8,8 +8,32 @@ class SwipeResult {
   SwipeResult({required this.matched, this.matchId});
 }
 
+class DailyPick {
+  final UserModel? pick;
+  final bool alreadyActed;
+  final bool empty;
+  final DateTime? resetAt;
+
+  DailyPick({this.pick, this.alreadyActed = false, this.empty = false, this.resetAt});
+
+  factory DailyPick.fromJson(Map<String, dynamic> json) {
+    final p = json['pick'];
+    return DailyPick(
+      pick: p is Map<String, dynamic> ? UserModel.fromJson(p) : null,
+      alreadyActed: json['alreadyActed'] == true,
+      empty: json['empty'] == true,
+      resetAt: json['resetAt'] != null ? DateTime.tryParse(json['resetAt'].toString()) : null,
+    );
+  }
+}
+
 class SwipeRepository {
   final ApiClient _api = ApiClient();
+
+  Future<DailyPick> getDailyPick() async {
+    final res = await _api.get('/swipe/daily');
+    return DailyPick.fromJson(res as Map<String, dynamic>);
+  }
 
   Future<List<UserModel>> getRecommendations({int limit = 10}) async {
     final res = await _api.get(ApiConstants.recommendations, query: {'limit': limit});

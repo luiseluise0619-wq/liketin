@@ -13,6 +13,15 @@ class SwipeController {
     }
   }
 
+  async getDailyPick(req, res, next) {
+    try {
+      const result = await swipeService.getDailyPick(req.user.id);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async swipe(req, res, next) {
     try {
       const { error, value } = swipeSchema.validate(req.body);

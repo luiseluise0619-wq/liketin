@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { swipeLimiter } = require('../middleware/rateLimiter');
 const swipeController = require('../controllers/swipeController');
 
+router.get('/daily', authenticate, swipeController.getDailyPick);
 router.get('/recommendations', authenticate, swipeController.getRecommendations);
 router.post('/', authenticate, swipeLimiter, swipeController.swipe);
 router.post('/undo', authenticate, swipeController.undoSwipe);

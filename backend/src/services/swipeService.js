@@ -1,5 +1,7 @@
 const prisma = require('../config/database');
+const redis = require('../config/redis');
 const { calculateDistance } = require('../utils/location');
+const { secondsUntilMidnight, nextMidnight, dateKey } = require('../utils/time');
 const notificationService = require('./notificationService');
 const logger = require('../utils/logger');
 
@@ -82,6 +84,71 @@ class SwipeService {
       isOnline: c.isOnline,
       lastActive: c.lastActiveAt,
     }));
+  }
+
+  // "One a day" mode: returns a single curated pick per calendar day. The
+  // chosen user id is cached in Redis until midnight so the pick is stable and
+  // does not change on refresh. Once the user acts (likes/passes) on it, the
+  // pick is considered spent until the next reset.
+  async getDailyPick(userId) {
+    const resetAt = nextMidnight();
+    const cacheKey = `dailypick:${userId}:${dateKey()}`;
+
+    const cachedId = await redis.get(cacheKey);
+    if (cachedId) {
+      const acted = await prisma.swipe.findUnique({
+        where: { swiperId_swipedId: { swiperId: userId, swipedId: cachedId } },
+      });
+      if (acted) {
+        return { pick: null, alreadyActed: true, resetAt };
+      }
+      const card = await this.getProfileCard(userId, cachedId);
+      // The cached user may have been deactivated/blocked since selection.
+      if (!card) return { pick: null, alreadyActed: false, empty: true, resetAt };
+      return { pick: card, alreadyActed: false, resetAt };
+    }
+
+    const recs = await this.getRecommendations(userId, 1);
+    if (!recs.length) {
+      return { pick: null, alreadyActed: false, empty: true, resetAt };
+    }
+
+    await redis.set(cacheKey, recs[0].id, 'EX', secondsUntilMidnight());
+    return { pick: recs[0], alreadyActed: false, resetAt };
+  }
+
+  // Builds a public swipe card for a single target as seen by `viewerId`.
+  async getProfileCard(viewerId, targetId) {
+    const [viewer, c] = await Promise.all([
+      prisma.user.findUnique({ where: { id: viewerId }, select: { location: true } }),
+      prisma.user.findUnique({
+        where: { id: targetId },
+        include: { photos: { orderBy: { order: 'asc' } }, interests: true },
+      }),
+    ]);
+    if (!c || c.status !== 'ACTIVE') return null;
+
+    let distance = null;
+    if (viewer?.location && c.location) {
+      distance = Math.round(
+        calculateDistance(viewer.location.lat, viewer.location.lng, c.location.lat, c.location.lng)
+      );
+    }
+
+    return {
+      id: c.id,
+      name: c.name,
+      age: this.calculateAge(c.birthDate),
+      bio: c.bio,
+      job: c.job,
+      height: c.height,
+      mbti: c.mbti,
+      distance,
+      photos: c.photos,
+      interests: c.interests,
+      isOnline: c.isOnline,
+      lastActive: c.lastActiveAt,
+    };
   }
 
   async swipe(userId, targetUserId, type) {
