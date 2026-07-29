@@ -161,7 +161,7 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         return Container(
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.15),
+            color: Colors.grey.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(Icons.add, color: Colors.grey),
@@ -204,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: names
               .map((n) => Chip(
                     label: Text(n),
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     side: BorderSide.none,
                   ))
               .toList(),

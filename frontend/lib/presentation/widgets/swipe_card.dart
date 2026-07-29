@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../data/models/user_model.dart';
 
 class SwipeCard extends StatelessWidget {
@@ -16,7 +15,7 @@ class SwipeCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, spreadRadius: 4),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 4),
         ],
       ),
       child: ClipRRect(
@@ -104,7 +103,7 @@ class SwipeCard extends StatelessWidget {
   Widget _chip(String label) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
@@ -150,7 +149,7 @@ class SwipeActionButton extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Theme.of(context).cardColor,
-        boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 12, spreadRadius: 1)],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12, spreadRadius: 1)],
       ),
       child: IconButton(
         onPressed: onPressed,

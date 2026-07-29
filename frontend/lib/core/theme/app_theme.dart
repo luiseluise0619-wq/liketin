@@ -68,7 +68,7 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 3,
-          shadowColor: AppColors.primary.withOpacity(0.4),
+          shadowColor: AppColors.primary.withValues(alpha: 0.4),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -76,7 +76,7 @@ class AppTheme {
       );
 
   static ChipThemeData get _chipTheme => ChipThemeData(
-        backgroundColor: AppColors.primary.withOpacity(0.10),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.10),
         labelStyle: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w600),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -97,9 +97,9 @@ class AppTheme {
         inputDecorationTheme: _inputTheme(const Color(0xFFFDECF1)),
         elevatedButtonTheme: _buttonTheme,
         chipTheme: _chipTheme,
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 6,
-          shadowColor: AppColors.primary.withOpacity(0.15),
+          shadowColor: AppColors.primary.withValues(alpha: 0.15),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_radius)),
         ),
         appBarTheme: const AppBarTheme(
@@ -115,7 +115,7 @@ class AppTheme {
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: Colors.white,
-          indicatorColor: AppColors.primary.withOpacity(0.14),
+          indicatorColor: AppColors.primary.withValues(alpha: 0.14),
           elevation: 8,
           labelTextStyle: WidgetStatePropertyAll(
             TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
@@ -138,7 +138,7 @@ class AppTheme {
         inputDecorationTheme: _inputTheme(const Color(0xFF342B38)),
         elevatedButtonTheme: _buttonTheme,
         chipTheme: _chipTheme,
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 6,
           color: AppColors.surfaceDark,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_radius)),
@@ -156,7 +156,7 @@ class AppTheme {
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.surfaceDark,
-          indicatorColor: AppColors.primary.withOpacity(0.24),
+          indicatorColor: AppColors.primary.withValues(alpha: 0.24),
           elevation: 8,
           labelTextStyle: WidgetStatePropertyAll(
             TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondaryDark),
