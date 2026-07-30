@@ -55,7 +55,12 @@ describeIf('matching flow (integration)', () => {
   });
 
   afterAll(async () => {
-    if (prisma) await prisma.$disconnect();
+    if (prisma) {
+      await prisma.user.deleteMany({
+        where: { id: { in: [user1Id, user2Id] } },
+      });
+      await prisma.$disconnect();
+    }
   });
 
   it('creates a match when both users like each other', async () => {
@@ -73,5 +78,23 @@ describeIf('matching flow (integration)', () => {
     expect(s2.statusCode).toBe(200);
     expect(s2.body.match).toBe(true);
     expect(s2.body).toHaveProperty('matchId');
+  });
+
+  it('blocks user successfully and removes matches', async () => {
+      const b1 = await request(app)
+        .post('/api/report/block')
+        .set('Authorization', `Bearer ${user1Token}`)
+        .send({ userId: user2Id });
+      expect(b1.statusCode).toBe(200);
+
+      const m = await prisma.match.findFirst({
+        where: {
+          OR: [
+            { user1Id: user1Id, user2Id: user2Id },
+            { user1Id: user2Id, user2Id: user1Id }
+          ]
+        }
+      });
+      expect(m.status).toBe('BLOCKED');
   });
 });
