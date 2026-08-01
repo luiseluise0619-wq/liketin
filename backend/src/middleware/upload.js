@@ -1,6 +1,5 @@
 const multer = require('multer');
 const sharp = require('sharp');
-const logger = require('../utils/logger');
 
 const storage = multer.memoryStorage();
 
@@ -23,7 +22,7 @@ const upload = multer({
 });
 
 // Validates real image content (dimensions) and rejects non-images that slipped
-// past the mimetype check. Basic NSFW check simulation.
+// past the mimetype check. NSFW/AI moderation should be plugged in here.
 const validateImage = async (req, res, next) => {
   const files = req.files || (req.file ? [req.file] : []);
   if (files.length === 0) return next();
@@ -36,12 +35,6 @@ const validateImage = async (req, res, next) => {
       }
       if (metadata.width < 200 || metadata.height < 200) {
         return res.status(400).json({ error: 'Image too small. Minimum 200x200 pixels required.' });
-      }
-
-      // Basic AI/NSFW rejection placeholder
-      if (file.size < 1000) { // A naive rule just as an example logic
-         logger.warn(`Suspiciously small valid image rejected for NSFW check: ${file.originalname}`);
-         // return res.status(400).json({ error: 'Image failed moderation.' });
       }
     }
     next();
