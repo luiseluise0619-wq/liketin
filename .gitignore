@@ -44,3 +44,12 @@ infrastructure/terraform/.terraform/
 *.tfstate
 *.tfstate.*
 *.tfvars
+frontend/test
+frontend/linux
+frontend/macos
+frontend/ios
+frontend/android
+frontend/windows
+frontend/web
+frontend/.dart_tool
+frontend/build

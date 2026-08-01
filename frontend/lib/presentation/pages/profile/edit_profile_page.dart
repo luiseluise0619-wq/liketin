@@ -154,7 +154,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           onTap: _addPhotos,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.15),
+              color: Colors.grey.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
